@@ -41,6 +41,11 @@ class AuthSystem {
           console.log('Loading achievements for signed in user');
           await window.AchievementsSystem.loadUserAchievements();
         }
+        // Load user shop data from Firebase
+        if (window.ShopSystem) {
+          console.log('Loading shop data for signed in user');
+          await window.ShopSystem.loadUserShopData();
+        }
         this.updateUIForSignedInUser();
         // Refresh the game UI to show updated stats
         if (window.refreshGameUI) {
@@ -64,6 +69,11 @@ class AuthSystem {
         if (window.AchievementsSystem) {
           console.log('Saving achievements to localStorage before sign out');
           window.AchievementsSystem.saveAchievements();
+        }
+        // Save current shop data to localStorage before signing out
+        if (window.ShopSystem) {
+          console.log('Saving shop data to localStorage before sign out');
+          window.ShopSystem.saveUserShopData();
         }
         this.updateUIForSignedOutUser();
       }

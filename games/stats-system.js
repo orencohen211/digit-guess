@@ -219,6 +219,15 @@ function calculateCoins(gameType, gameMode, guesses, isWin = false) {
   }
   // Reverse games get no coins
   
+  // Apply coin multiplier if active
+  if (window.ShopSystem && window.ShopSystem.getInventory().activeMultiplier > 0) {
+    coinsEarned *= 2;
+    // Decrease multiplier count
+    const inventory = window.ShopSystem.getInventory();
+    inventory.activeMultiplier--;
+    window.ShopSystem.saveUserShopData();
+  }
+  
   return coinsEarned;
 }
 

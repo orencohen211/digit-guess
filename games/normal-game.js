@@ -97,6 +97,12 @@ function resetGameState() {
   guessHistory = [];
   currentGuesses = 0;
   numberKnowledge = Array(10).fill(null);
+  
+  // Reset hint system for new game
+  if (window.hintSystem) {
+    window.hintSystem.reset();
+    window.hintSystem.setGameState(secretNumber, []);
+  }
 }
 
 function getGuessFeedback(guess, secret) {
@@ -184,9 +190,15 @@ function renderGameUI(feedbackArr = null) {
   
   const correctDigitsDisplay = correctDigits.slice(0, mode).map(d => d !== null ? d : '_').join('');
   
+  // Check if hint is available
+  const canUseHint = window.hintSystem && window.hintSystem.canUseHint();
+  const hintButton = canUseHint ? 
+    `<button id="hintBtn" style="position: absolute; top: 200px; right: 20px; font-size: 1.5rem; padding: 0.5rem 1rem; background: #007cbe; color: white; border: none; border-radius: 10px; cursor: pointer;">💡 Hint</button>` : '';
+  
   gameScreen.innerHTML = `
     <button id="lobbyBtn" class="top-left">Lobby</button>
     ${renderStatsBar()}
+    ${hintButton}
     <div id="gameTimer" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); 
                 color: #fff; font-size: 2rem; font-weight: bold; z-index: 10;">Time: 0:00</div>
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
@@ -208,6 +220,21 @@ function renderGameUI(feedbackArr = null) {
     stopTimer(); // Stop timer when returning to lobby
     showLobbyScreen(); 
   });
+  
+  // Add hint button functionality
+  if (canUseHint) {
+    document.getElementById('hintBtn').addEventListener('click', () => {
+      const hint = window.hintSystem.useHint();
+      if (hint) {
+        feedbackDiv.textContent = `💡 Hint: ${hint}`;
+        feedbackDiv.style.color = '#007cbe';
+        setTimeout(() => {
+          feedbackDiv.textContent = '';
+          feedbackDiv.style.color = '#fff';
+        }, 5000);
+      }
+    });
+  }
   
   const input = document.getElementById('guessInput');
   input.focus();
@@ -247,6 +274,11 @@ function handleNormalGameKeydown(e) {
       
       // Add to history
       guessHistory.push({guess, feedback: feedbackArr.slice()});
+      
+      // Update hint system with new guess
+      if (window.hintSystem) {
+        window.hintSystem.setGameState(secretNumber, guessHistory.map(h => h.guess));
+      }
       
       currentGuesses++;
       renderGameUI(feedbackArr);

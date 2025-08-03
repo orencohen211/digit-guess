@@ -77,6 +77,12 @@ document.getElementById('achievementsBtn').addEventListener('click', () => {
   AchievementsSystem.showAchievementsPanel();
 });
 
+document.getElementById('shopBtn').addEventListener('click', () => {
+  if (window.ShopSystem) {
+    window.ShopSystem.showShop();
+  }
+});
+
 document.getElementById('leaderboardBtn').addEventListener('click', () => {
   if (window.leaderboardSystem) {
     window.leaderboardSystem.showLeaderboard();

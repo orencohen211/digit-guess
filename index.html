@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .top-left {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        .centered {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        button:hover {
+            background: #45a049;
+        }
+        input {
+            background: #333;
+            color: white;
+            border: 2px solid #555;
+            border-radius: 5px;
+            padding: 0.5rem;
+            font-size: 1rem;
+        }
+        input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <!-- Username Change Modal -->
+    <div id="usernameModal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 3000;">
+        <div style="background: #1a1a1a; padding: 2rem; border-radius: 15px; text-align: center; color: white; min-width: 300px;">
+            <h3 style="margin-bottom: 1.5rem;">Change Username</h3>
+            <div style="margin-bottom: 1rem;">
+                <input type="text" id="newUsernameInput" placeholder="Enter new username" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <button onclick="updateUsername()" style="margin-right: 1rem;">Update</button>
+                <button onclick="hideUsernameModal()" style="background: #666;">Cancel</button>
+            </div>
+            <div id="usernameError" style="color: #ff4136; margin-top: 1rem;"></div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 2000;">
+        <div style="background: #1a1a1a; padding: 3rem; border-radius: 20px; text-align: center; color: white; min-width: 300px;">
+            <h2 style="margin-bottom: 2rem;">Welcome to Guess Game!</h2>
+            <div style="margin-bottom: 1rem;">
+                <input type="email" id="emailInput" placeholder="Email" style="width: 100%; margin-bottom: 1rem;">
+                <input type="password" id="passwordInput" placeholder="Password" style="width: 100%; margin-bottom: 1rem;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <button onclick="handleSignIn()" style="margin-right: 1rem;">Sign In</button>
+                <button onclick="handleSignUp()">Sign Up</button>
+            </div>
+            <div id="authError" style="color: #ff4136; margin-top: 1rem;"></div>
+        </div>
+    </div>
+
+    <!-- User Info Display -->
+    <div id="userInfo" class="hidden" style="position: absolute; bottom: 20px; right: 20px; z-index: 1000;"></div>
+
+    <div id="lobbyScreen">
+        <button id="achievementsBtn" class="top-left" style="font-size: 1.5rem; padding: 0.5rem 1rem;">🏆 Achievements</button>
+        <div id="coinDisplay" style="position: absolute; top: 20px; right: 20px; background: rgba(255, 215, 0, 0.9); color: #000; padding: 0.5rem 1rem; border-radius: 15px; font-size: 1.5rem; font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">🪙 0</div>
+        <button id="leaderboardBtn" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-size: 1.5rem; padding: 0.5rem 1rem; background: #4CAF50; color: white; border: none; border-radius: 10px; cursor: pointer;">📊 Leaderboard</button>
+        <button id="soundToggleBtn" style="position: absolute; bottom: 20px; left: 20px; font-size: 1.2rem; padding: 0.5rem 1rem; background: #333; color: white; border: none; border-radius: 10px; cursor: pointer;">🔊 Sound</button>
+        <div id="coinRulesDisplay" style="position: absolute; top: 80px; left: 20px; background: rgba(255, 215, 0, 0.9); color: #000; padding: 1rem; border-radius: 15px; font-size: 1rem; font-weight: bold; box-shadow: 0 2px 10px rgba(0,0,0,0.3); max-width: 300px;">
+            <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">🪙 Coin Rewards:</div>
+            <div style="font-size: 0.8rem; line-height: 1.3;">
+                • 3-digit: ≤3 guesses = 20 coins<br>
+                • 4-digit: ≤4 guesses = 15 coins<br>
+                • 5-digit: ≤3 guesses = 30 coins<br>
+                • Any digit: (10-guesses) coins<br>
+                • Hot/Cold: ≤4 guesses = 50 coins<br>
+                • Hot/Cold: any win = 5 coins
+            </div>
+        </div>
+        <button id="newGame3Btn" class="centered" style="top: calc(50% - 90px);">3 digit guessing</button>
+        <button id="newGameBtn" class="centered">4 digit guessing</button>
+        <button id="newGame5Btn" class="centered" style="top: calc(50% + 90px);">5 digit guessing</button>
+        <button id="reverseGuessBtn" class="centered" style="top: calc(50% + 180px);">Reverse Guessing (AI guesses your number)</button>
+        <button id="hotColdBtn" class="centered" style="top: calc(50% + 270px);">Hot/Cold Game (1-100)</button>
+        <button id="multiplayerBtn" class="centered" style="top: calc(50% + 360px); background: #9b59b6; color: white; border: none; border-radius: 10px; cursor: pointer;">🎮 1v1 Multiplayer</button>
+    </div>
+    <div id="gameScreen" class="hidden">
+        <button id="lobbyBtn" class="top-left">Lobby</button>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- Load Firebase config first -->
+    <script src="firebase-config.js"></script>
+    
+    <!-- Load sound system first -->
+    <script src="sounds/sound-system.js"></script>
+    
+    <!-- Load game modules in order -->
+    <script src="games/stats-system.js"></script>
+    <script src="games/achievements-system.js"></script>
+    <script src="games/normal-game.js"></script>
+    <script src="games/reverse-game.js"></script>
+    <script src="games/hot-cold-game.js"></script>
+    <script src="auth-system.js"></script>
+    <script src="leaderboard-system.js"></script>
+    <script src="multiplayer-system.js"></script>
+    <script src="simple-multiplayer-system.js"></script>
+    <script src="game.js"></script>
+
+    <script>
+        // Auth UI handlers
+        async function handleSignIn() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const errorDiv = document.getElementById('authError');
+            
+            try {
+                if (!window.authSystem) {
+                    throw new Error('Authentication system not ready. Please wait a moment and try again.');
+                }
+                await window.authSystem.signIn(email, password);
+                errorDiv.textContent = '';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            }
+        }
+
+        async function handleSignUp() {
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const errorDiv = document.getElementById('authError');
+            
+            try {
+                if (!window.authSystem) {
+                    throw new Error('Authentication system not ready. Please wait a moment and try again.');
+                }
+                await window.authSystem.signUp(email, password);
+                errorDiv.textContent = '';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            }
+        }
+
+        // Username modal functions
+        function showUsernameModal() {
+            const modal = document.getElementById('usernameModal');
+            const input = document.getElementById('newUsernameInput');
+            const userProfile = window.authSystem.getUserProfile();
+            
+            if (userProfile) {
+                input.value = userProfile.username;
+            }
+            
+            modal.classList.remove('hidden');
+            input.focus();
+        }
+
+        function hideUsernameModal() {
+            const modal = document.getElementById('usernameModal');
+            const errorDiv = document.getElementById('usernameError');
+            
+            modal.classList.add('hidden');
+            errorDiv.textContent = '';
+        }
+
+        async function updateUsername() {
+            const newUsername = document.getElementById('newUsernameInput').value.trim();
+            const errorDiv = document.getElementById('usernameError');
+            
+            if (!newUsername) {
+                errorDiv.textContent = 'Username cannot be empty';
+                return;
+            }
+            
+            if (newUsername.length < 3) {
+                errorDiv.textContent = 'Username must be at least 3 characters';
+                return;
+            }
+            
+            if (newUsername.length > 20) {
+                errorDiv.textContent = 'Username must be 20 characters or less';
+                return;
+            }
+            
+            try {
+                await window.authSystem.updateUsername(newUsername);
+                hideUsernameModal();
+            } catch (error) {
+                errorDiv.textContent = error.message;
+            }
+        }
+    </script>
+</body>
+</html>

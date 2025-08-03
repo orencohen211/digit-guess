@@ -30,6 +30,8 @@ function refreshGameUI() {
   updateAchievementsButton();
   // Refresh coin display
   updateCoinDisplay();
+  // Setup shop button (in case it wasn't set up initially)
+  setupShopButton();
   // If we're in a game, refresh the stats bar
   if (!gameScreen.classList.contains('hidden')) {
     // This will refresh the stats bar in the current game
@@ -77,11 +79,22 @@ document.getElementById('achievementsBtn').addEventListener('click', () => {
   AchievementsSystem.showAchievementsPanel();
 });
 
-document.getElementById('shopBtn').addEventListener('click', () => {
-  if (window.ShopSystem) {
-    window.ShopSystem.showShop();
+// Set up shop button event listener with retry mechanism
+function setupShopButton() {
+  const shopBtn = document.getElementById('shopBtn');
+  if (shopBtn && window.ShopSystem) {
+    shopBtn.addEventListener('click', () => {
+      if (window.ShopSystem) {
+        window.ShopSystem.showShop();
+      }
+    });
+  } else if (shopBtn && !window.ShopSystem) {
+    // Retry after a short delay if shop system isn't loaded yet
+    setTimeout(setupShopButton, 100);
   }
-});
+}
+
+setupShopButton();
 
 document.getElementById('leaderboardBtn').addEventListener('click', () => {
   if (window.leaderboardSystem) {
